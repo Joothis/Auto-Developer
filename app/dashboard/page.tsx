@@ -8,21 +8,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { LogOut, FileText, Mail } from "lucide-react"
-import { NotesManager } from "@/components/notes-manager"
-import { AIInsights } from "@/components/ai-insights"
+import { 
+  LogOut, 
+  Plus, 
+  Code, 
+  Database, 
+  Cloud, 
+  Bot, 
+  Folder,
+  Activity,
+  Settings,
+  Zap
+} from "lucide-react"
+import { ProjectManager } from "@/components/project-manager"
+import { AIAssistant } from "@/components/ai-assistant"
 
-interface Note {
+interface Project {
   id: string
-  title: string
-  content: string
+  name: string
+  description: string
+  framework: string
+  status: string
   createdAt: string
   updatedAt: string
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any | null>(null)
-  const [notes, setNotes] = useState<Note[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
@@ -34,20 +47,18 @@ export default function DashboardPage() {
       return
     }
 
-    // Load user data from localStorage
     const userData = localStorage.getItem("user")
     if (userData) {
       setUser(JSON.parse(userData))
     }
 
-    // Fetch notes
-    fetchNotes()
+    fetchProjects()
   }, [router])
 
-  const fetchNotes = async () => {
+  const fetchProjects = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("/api/notes", {
+      const response = await fetch("/api/projects", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -55,10 +66,10 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setNotes(data.notes)
+        setProjects(data.projects || [])
       }
     } catch (error) {
-      console.error("Error fetching notes:", error)
+      console.error("Error fetching projects:", error)
     } finally {
       setIsLoading(false)
     }
@@ -97,11 +108,23 @@ export default function DashboardPage() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">Notes Dashboard</h1>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Code className="h-6 w-6 text-blue-600" />
+                <h1 className="text-xl font-bold text-gray-900">DevAI Studio</h1>
+              </div>
+              <Separator orientation="vertical" className="h-6" />
+              <Badge variant="secondary">
+                <Zap className="h-3 w-3 mr-1" />
+                Pro
+              </Badge>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -112,8 +135,8 @@ export default function DashboardPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* User Profile Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* User Profile & Stats */}
           <div className="lg:col-span-1">
             <Card>
               <CardHeader className="text-center">
@@ -125,46 +148,106 @@ export default function DashboardPage() {
                 <CardDescription>{user?.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Member since</span>
-                  <Badge variant="secondary">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
-                  </Badge>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Total Notes</span>
-                  <Badge variant="outline">{notes.length}</Badge>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">{projects.length}</div>
+                    <div className="text-xs text-gray-500">Projects</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {projects.filter(p => p.status === 'deployed').length}
+                    </div>
+                    <div className="text-xs text-gray-500">Deployed</div>
+                  </div>
                 </div>
                 <Separator />
-                <div className="text-center">
-                  <p className="text-sm text-gray-500 mb-2">Quick Stats</p>
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <div>
-                      <p className="text-2xl font-bold text-blue-600">{notes.length}</p>
-                      <p className="text-xs text-gray-500">Notes</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-green-600">
-                        {notes.reduce((acc, note) => acc + note.content.split(" ").length, 0)}
-                      </p>
-                      <p className="text-xs text-gray-500">Words</p>
-                    </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">API Calls Today</span>
+                    <Badge variant="outline">1,234</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Storage Used</span>
+                    <Badge variant="outline">2.4 GB</Badge>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* AI Insights Card */}
-            <div className="mt-6">
-              <AIInsights notes={notes} />
+            {/* Quick Actions */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full justify-start" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Database className="h-4 w-4 mr-2" />
+                  Create Database
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Cloud className="h-4 w-4 mr-2" />
+                  Deploy App
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Assistant
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <div className="space-y-6">
+              {/* Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Folder className="h-8 w-8 text-blue-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Total Projects</p>
+                        <p className="text-2xl font-bold">{projects.length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Activity className="h-8 w-8 text-green-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Active APIs</p>
+                        <p className="text-2xl font-bold">12</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center">
+                      <Cloud className="h-8 w-8 text-purple-500" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-gray-600">Deployments</p>
+                        <p className="text-2xl font-bold">8</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Project Manager */}
+              <ProjectManager projects={projects} onProjectsChange={fetchProjects} />
             </div>
           </div>
 
-          {/* Notes Management */}
-          <div className="lg:col-span-2">
-            <NotesManager notes={notes} onNotesChange={fetchNotes} />
+          {/* AI Assistant Sidebar */}
+          <div className="lg:col-span-1">
+            <AIAssistant />
           </div>
         </div>
       </div>

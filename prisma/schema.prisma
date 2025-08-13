@@ -20,6 +20,7 @@ model User {
   
   // Relations
   notes     Note[]
+  projects  Project[]
 
   @@map("users")
 }
@@ -36,4 +37,20 @@ model Note {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notes")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  framework   String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Foreign key
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
 }
